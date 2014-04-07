@@ -4,6 +4,8 @@
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
 RECORDSTEMPL=RecordTempl.xml
+AWT_ENC=./awt2_enc.exe
+#./awt2_enc_x64.exe 
 
 # runtime configurations
 declare -a KEYS
@@ -40,7 +42,7 @@ EncodeWavFolder()
 			echo "Track $f missing"
 			exit 10
 		fi
-	        ./awt2_enc_x64.exe "$SOURCEFOLDER/$f" "$ENCODEDWAVFOLDER/${f##*/}" $2
+	        "$AWT_ENC" "$SOURCEFOLDER/$f" "$ENCODEDWAVFOLDER/${f##*/}" $2
 	done
 }
 
