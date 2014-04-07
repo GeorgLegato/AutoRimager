@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProductionOrder SYSTEM "C:/Rimage/XML/ProductionOrder_1.9.DTD">
+<ProductionOrder Copies="1" LogonId="alex" OrderId="${ORDERID}" ClientId="QD_ALEX_ALEX-PC" Priority="Normal" ImagerHost="ALEX-PC" Originator="QD_ALEX_ALEX-PC" 
+ExternalImager="false" SimulatePrinting="false" SimulateRecording="false" ${CDTEXT} >
+<Media Size="120mm" Type="CDR"/>
+<Target Line="ANY" Server="ANY" Cluster="DefaultProductionCluster"/>
+<InOut OutputMailslot="0"/>
+
+<Action>
+
+  ${RECORDS}
+
+</Action>
+
+<Action>
+  <Record>
+    <Fixate Type="SAO" Final="true"/>
+  </Record>
+</Action>
+
+</ProductionOrder>
