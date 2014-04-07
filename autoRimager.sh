@@ -1,5 +1,5 @@
 #!/bin/bash
-# Argument = -k 1 -k 3 -k10-20 -k0xf-0x11 -c ./wavs/cdtext.xml -s ./wavs -t Intro.wav -t chapter1.wav -t chapter2.wav
+# Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -c c:/albumwavs/cdtext.xml -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
 
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
