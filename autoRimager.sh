@@ -1,15 +1,21 @@
 #!/bin/bash
-# Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -c c:/albumwavs/cdtext.xml -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
+# Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
+#  -k0x56 -k0x7890 -k0x9876 -k0xABCDEF12 -k0x12345678
+
+VERSION=0.3
 
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
 RECORDSTEMPL=RecordTempl.xml
+LABELACTIONTEMPL=LabelTempl.xml
+CDTEXT=cdtext.xml
+LABELFILE=label.btw
+MERGEFILE=merge.txt
+
 AWT_ENC=./awt2_enc.exe
-#./awt2_enc_x64.exe 
 
 # runtime configurations
 declare -a KEYS
-CDTEXT=
 SOURCEFOLDER=
 declare -a TRACKS
 VERBOSE=
@@ -35,7 +41,8 @@ EncodeWavFolder()
 
 	mkdir "$ENCODEDWAVFOLDER"
 
-	for f in ${TRACKS[@]}
+	#@FIX: support whitespaces in the track filenames
+	for f in "${TRACKS[@]}"
 	do
 		if [ ! -e "$SOURCEFOLDER/$f" ]
 		then
@@ -81,7 +88,7 @@ createEncodedWavs()
 		RECORDS=
 		for t in "${TRACKS[@]}"
 		do	
-			#ASBTRACKFILE and RECORDS is used within ProdXML template                  
+			#ABSTRACKFILE and RECORDS is used within ProdXML template                  
 			ABSTRACKFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$t")
 
 			RECORDS+=$(RenderTempl "$RECORDSTEMPL")
@@ -92,6 +99,20 @@ createEncodedWavs()
 		
 		#ORDERID is used within ProdXML template
 		ORDERID="$SOURCEFOLDER_$ENCODEDWAVFOLDER"
+
+		# process the Label file if exists
+		if [ -e "$SOURCEFOLDER/$LABELFILE" ]
+		then
+			ABSLABELFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$LABELFILE")
+			ABSMERGEFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$MERGEFILE")
+			
+			cp "$SOURCEFOLDER/$LABELFILE" $ABSLABELFILE
+			printf "\"Nummer\"\\n\"%05d\"" $K > $ABSMERGEFILE  		
+									
+			LABELACTION=$(RenderTempl "$LABELACTIONTEMPL")
+		else
+			LABELACTION=		
+		fi
 
 		RenderTempl "$PRODORDERTEMPL" > "$PRODINST"
 
@@ -115,14 +136,14 @@ verboseVariables()
 usage()
 {
  cat << EOF
- usage: $0 options
+AutoRimager $VERSION, Copyright GeorgLegato, GPLV2
+usage: $0 options
 
 This script encodes waves using watermark and creates a Rimage production job for each encoded album 
 
 OPTIONS:
     -h		Show this message
     -k<n>	Encoding key(s), repeatable, n: <dec | dec"-"dec | hex | hex"-"hex>
-    [-c]	CDTEXT xml file (see rimage dtd), optional
     -s		Source wav file folder 
     -t		Track filename order (as existing in source folder), repeatable
     -v		Verbose
@@ -178,12 +199,16 @@ do
 				Decho "key format error: $OPTARG"; exit 20; 
 			fi
               ;;
-          c)
-              CDTEXT="$OPTARG"
-              ;;
           s)
-              SOURCEFOLDER=$OPTARG
-              ;;
+			SOURCEFOLDER=$OPTARG
+			#@FIX: assume cdtext.xml may be located next to the wav files (album folder), as replacement for the explicit parameter -c
+			if [ -e "$SOURCEFOLDER/$CDTEXT" ]
+			then
+				CDTEXT="$SOURCEFOLDER/$CDTEXT"
+			else
+				CDTEXT=
+			fi
+			;;			
           t)
               TRACKS=("${TRACKS[@]}" "$OPTARG")
               ;;

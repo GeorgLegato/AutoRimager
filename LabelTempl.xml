@@ -1,0 +1,5 @@
+<Action>
+	<Label Filename="${ABSLABELFILE}">
+		<BTW Merge_Filename="${ABSMERGEFILE}" SaveAfterRendering="true" MergeFileHasFieldNames="true"/>
+	</Label>
+</Action>

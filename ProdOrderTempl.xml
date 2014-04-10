@@ -18,4 +18,6 @@ ExternalImager="false" SimulatePrinting="false" SimulateRecording="false" ${CDTE
   </Record>
 </Action>
 
+${LABELACTION}
+
 </ProductionOrder>
