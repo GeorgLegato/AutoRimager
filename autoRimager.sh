@@ -11,6 +11,8 @@ LABELACTIONTEMPL=LabelTempl.xml
 CDTEXT=cdtext.xml
 LABELFILE=label.btw
 MERGEFILE=merge.txt
+ALLJOBSLIST=all.txt
+
 
 AWT_ENC=./awt2_enc.exe
 
@@ -21,6 +23,8 @@ declare -a TRACKS
 VERBOSE=
 RECORDS=
 DEB=
+OUTPUTFOLDER=
+KEYLENGTH=4
 
 Decho()
 {
@@ -36,10 +40,10 @@ EncodeWavFolder()
 	# $1 : source folder
 	# $2 : encoding key (hexadecimal)
 
-	ENCODEDWAVFOLDER=$2_dec_$(($2))
-	echo "Creating encoded wav folder: $ENCODEDWAVFOLDER"
+	ENCODEDWAVFOLDER="$2_dec_$(($2))"
+	echo "Creating encoded wav folder: $OUTPUTFOLDER/$ENCODEDWAVFOLDER"
 
-	mkdir "$ENCODEDWAVFOLDER"
+	mkdir "$OUTPUTFOLDER/$ENCODEDWAVFOLDER" || exit 1;
 
 	#@FIX: support whitespaces in the track filenames
 	for f in "${TRACKS[@]}"
@@ -49,7 +53,7 @@ EncodeWavFolder()
 			echo "Track $f missing"
 			exit 10
 		fi
-	        "$AWT_ENC" "$SOURCEFOLDER/$f" "$ENCODEDWAVFOLDER/${f##*/}" $2
+	        "$AWT_ENC" "$SOURCEFOLDER/$f" "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/${f##*/}" $2 || exit 1;
 	done
 }
 
@@ -63,9 +67,15 @@ EOF
 
 createEncodedWavs()
 {
+	if [[ -e $SOURCEFOLDER/$ALLJOBSLIST ]]
+	then
+		rm $SOURCEFOLDER/$ALLJOBSLIST || exit 1
+	fi
+	
 	for K in "${KEYS[@]}"
 	do
-		X=$(printf "0x%x" $K)
+		local FORMAT="0x%0${KEYLENGTH}x"
+		X=$(printf $FORMAT $K)
 				
 		if [[ ! -z $VERBOSE ]]
 		then
@@ -75,7 +85,7 @@ createEncodedWavs()
 		EncodeWavFolder "$SOURCEFOLDER" $X
 
 		# do the ProductionOrder substitution
-		PRODINST="$ENCODEDWAVFOLDER/ProdOrder_$ENCODEDWAVFOLDER.xml"
+		PRODINST="$OUTPUTFOLDER/$ENCODEDWAVFOLDER/ProdOrder_$ENCODEDWAVFOLDER.xml"
 
 		local T=$CDTEXT
 
@@ -89,7 +99,7 @@ createEncodedWavs()
 		for t in "${TRACKS[@]}"
 		do	
 			#ABSTRACKFILE and RECORDS is used within ProdXML template                  
-			ABSTRACKFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$t")
+			ABSTRACKFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$t")
 
 			RECORDS+=$(RenderTempl "$RECORDSTEMPL")
 
@@ -103,11 +113,11 @@ createEncodedWavs()
 		# process the Label file if exists
 		if [ -e "$SOURCEFOLDER/$LABELFILE" ]
 		then
-			ABSLABELFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$LABELFILE")
-			ABSMERGEFILE=$(cygpath.exe -wa "$ENCODEDWAVFOLDER/$MERGEFILE")
+			ABSLABELFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$LABELFILE")
+			ABSMERGEFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$MERGEFILE")
 			
-			cp "$SOURCEFOLDER/$LABELFILE" $ABSLABELFILE
-			printf "\"Nummer\"\\n\"%05d\"" $K > $ABSMERGEFILE  		
+			cp "$SOURCEFOLDER/$LABELFILE" $ABSLABELFILE || exit 1;
+			printf "\"Nummer\"\\n\"%05d\"" $K > $ABSMERGEFILE		
 									
 			LABELACTION=$(RenderTempl "$LABELACTIONTEMPL")
 		else
@@ -115,8 +125,12 @@ createEncodedWavs()
 		fi
 
 		RenderTempl "$PRODORDERTEMPL" > "$PRODINST"
+		
+		# append to the all.txt 
+		echo "$PRODINST" >> "$SOURCEFOLDER/$ALLJOBSLIST"
 
 		CDTEXT=$T
+
 	done
 }
 
@@ -144,23 +158,29 @@ This script encodes waves using watermark and creates a Rimage production job fo
 OPTIONS:
     -h		Show this message
     -k<n>	Encoding key(s), repeatable, n: <dec | dec"-"dec | hex | hex"-"hex>
-    -s		Source wav file folder 
+    -l		length of the encoding size (1,2,4,8,16, depends on your license)
+    -s		Source wav file folder
+    -o		Output folder, optional, default: same as source folder 
     -t		Track filename order (as existing in source folder), repeatable
     -v		Verbose
     -d		Debug output
 EOF
 }
 
-while getopts "dvhk:c:s:t:" OPTION
+while getopts "dvhk:c:s:t:o:l:" OPTION
 do
       case $OPTION in
           d)
-              DEB="bla23459"
+              DEB="1"
               ;;
           h)
               usage
               exit 1
               ;;
+          l)
+        		KEYLENGTH=$OPTARG
+        		;;
+       
           k)
 			Decho "raw OPTARG: $OPTARG";
             #XDIGIT=[a-zA-Z0-9]
@@ -169,6 +189,9 @@ do
 			if [[ $OPTARG =~ (0x[a-zA-Z0-9]+)-(0x[a-zA-Z0-9]+) ]] 
 			then
 				Decho "keyrange hex: from: ${BASH_REMATCH[1]} to ${BASH_REMATCH[2]}"
+				#KEYLENGTH=$(expr ${#BASH_REMATCH[1]##0x} - 2)
+				#Decho "detected keylength: $KEYLENGTH"
+				
 				i=$((${BASH_REMATCH[1]}))
 				j=$((${BASH_REMATCH[2]}))
 
@@ -190,6 +213,8 @@ do
 			elif [[ $OPTARG =~ (0x[a-zA-Z0-9]+) ]];
 			then
 				Decho "xdigit found: $((${BASH_REMATCH[1]}))"        
+				#KEYLENGTH=$(expr ${#BASH_REMATCH[1]##0x} - 2)
+				#Decho "detected keylength: $KEYLENGTH"
 				KEYS=("${KEYS[@]}" $((OPTARG)))
 			elif [[ $OPTARG =~ ([0-9]+)$ ]]
 			then
@@ -212,6 +237,9 @@ do
           t)
               TRACKS=("${TRACKS[@]}" "$OPTARG")
               ;;
+          o)
+              OUTPUTFOLDER="$OPTARG"
+              ;;
           v)
               VERBOSE=1
               ;;
@@ -232,6 +260,11 @@ fi
 if [[ -z $CDTEXT ]]
 then
 	echo "Warning, no CDTEXT defined..."
+fi
+
+if [[ -z $OUTPUTFOLDER ]]
+then
+	OUTPUTFOLDER="$SOURCEFOLDER"
 fi
 
 # all input parameters ok, start proceeding
