@@ -8,15 +8,16 @@ VERSION=0.4
 PRODORDERTEMPL=ProdOrderTempl.xml
 RECORDSTEMPL=RecordTempl.xml
 LABELACTIONTEMPL=LabelTempl.xml
-CDTEXT=cdtext.xml
 LABELFILE=label.btw
 MERGEFILE=merge.txt
 ALLJOBSLIST=all.txt
+CDTEXTNAME=cdtext.xml
 
 
 AWT_ENC=./awt2_enc.exe
 
 # runtime configurations
+CDTEXT=
 declare -a KEYS
 SOURCEFOLDER=
 declare -a TRACKS
@@ -91,8 +92,13 @@ createEncodedWavs()
 
 		if [[ "" != $CDTEXT ]]
 		then
-			CDTEXT=$(cygpath.exe -wa "$CDTEXT")
-			CDTEXT="CD_Text_Filename=\"$CDTEXT\""
+			Decho "CDTEXT: $CDTEXT"
+			Decho "EncodeFolder: $ENCODEDWAVFOLDER"
+			
+			local CDT="$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$CDTEXTNAME"
+			cp "$CDTEXT" "$CDT" || exit 1
+			CDTEXT=$(cygpath.exe -wa "$CDT")
+			CDTEXT="CD_Text_Filename=\"$CDT\""
 		fi
 
 		RECORDS=
@@ -117,7 +123,7 @@ createEncodedWavs()
 			ABSMERGEFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$MERGEFILE")
 			
 			cp "$SOURCEFOLDER/$LABELFILE" $ABSLABELFILE || exit 1;
-			printf "\"Nummer\"\\n\"%05d\"" $K > $ABSMERGEFILE		
+			printf "\"Nummer\"\\n\"%d\"" $K > $ABSMERGEFILE		
 									
 			LABELACTION=$(RenderTempl "$LABELACTIONTEMPL")
 		else
@@ -227,9 +233,9 @@ do
           s)
 			SOURCEFOLDER=$OPTARG
 			#@FIX: assume cdtext.xml may be located next to the wav files (album folder), as replacement for the explicit parameter -c
-			if [ -e "$SOURCEFOLDER/$CDTEXT" ]
+			if [ -e "$SOURCEFOLDER/$CDTEXTNAME" ]
 			then
-				CDTEXT="$SOURCEFOLDER/$CDTEXT"
+				CDTEXT="$SOURCEFOLDER/$CDTEXTNAME"
 			else
 				CDTEXT=
 			fi
