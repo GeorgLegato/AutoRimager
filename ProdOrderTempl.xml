@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
-<!DOCTYPE ProductionOrder SYSTEM "C:/Rimage/XML/ProductionOrder_1.9.DTD">
+<!DOCTYPE ProductionOrder SYSTEM "/Rimage/XML/ProductionOrder_1.9.DTD">
 <ProductionOrder Copies="1" LogonId="alex" OrderId="${ORDERID}" ClientId="QD_ALEX_ALEX-PC" Priority="Normal" ImagerHost="ALEX-PC" Originator="QD_ALEX_ALEX-PC" 
 ExternalImager="false" SimulatePrinting="false" SimulateRecording="false" ${CDTEXT} >
 <Media Size="120mm" Type="CDR"/>
 <Target Line="ANY" Server="ANY" Cluster="DefaultProductionCluster"/>
 <InOut OutputMailslot="0"/>
 
-<Action>
-
-  ${RECORDS}
-
-</Action>
+<!--  Actions for each Track will be inserted here -->
+${RECORDS}
 
 <Action>
   <Record>
@@ -18,6 +15,7 @@ ExternalImager="false" SimulatePrinting="false" SimulateRecording="false" ${CDTE
   </Record>
 </Action>
 
+<!--  Actions for the labeling will be inserted here, if any label.btw was found -->
 ${LABELACTION}
 
 </ProductionOrder>

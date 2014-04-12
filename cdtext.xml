@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE CDTextData SYSTEM "C:/Rimage/XML/CdText_1.0.DTD">
+<!DOCTYPE CDTextData SYSTEM "/Rimage/XML/CdText_1.0.DTD">
 <CDTextData>
   <LanguageSet>
     <TrackInfo TrackNumber="0" Title= "ALBUM JazzForgedXa" Performer="P0" SongWriter="S0" Composer="C0" Arranger="A0" Message="M0"/>
