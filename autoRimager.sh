@@ -2,7 +2,7 @@
 # Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
 #  -k0x56 -k0x7890 -k0x9876 -k0xABCDEF12 -k0x12345678
 
-VERSION=0.4
+VERSION=0.5
 
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
