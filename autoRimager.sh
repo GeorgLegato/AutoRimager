@@ -2,7 +2,7 @@
 # Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
 #  -k0x56 -k0x7890 -k0x9876 -k0xABCDEF12 -k0x12345678
 
-VERSION=0.5
+VERSION=0.51
 
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
@@ -21,11 +21,14 @@ CDTEXT=
 declare -a KEYS
 SOURCEFOLDER=
 declare -a TRACKS
+declare -a ISRCCODES
 VERBOSE=
 RECORDS=
 DEB=
 OUTPUTFOLDER=
 KEYLENGTH=4
+
+source ./xmlbashing.sh
 
 Decho()
 {
@@ -34,6 +37,23 @@ Decho()
 		echo $1
 	fi	
 }
+
+
+
+prepareISRCCodes()
+{
+	
+	# 1st clear all codes matching to the amount of tracks, where index 0 is the album isrc (no sense)
+	for (( i=0; i<${#TRACKS[@]}; i++ ))
+	do
+			ISRCODES[i+1]=""
+	done	
+
+	xml_read $CDTEXT TrackInfo ISRC_Code
+	echo "DEBUG: Attributes = $ATTRIBUTES"
+			
+}
+
 
 EncodeWavFolder()
 {
@@ -102,8 +122,12 @@ createEncodedWavs()
 		fi
 
 		RECORDS=
-		for t in "${TRACKS[@]}"
+		ISRCCODE=
+		for (( i=0; i<"${#TRACKS[@]}"; ++i ))
 		do	
+			local t=${TRACKS[$i]}
+			local isrc=${ISRCCODES[$i+1]}
+
 			#ABSTRACKFILE and RECORDS is used within ProdXML template                  
 			ABSTRACKFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$t")
 
@@ -275,4 +299,5 @@ fi
 
 # all input parameters ok, start proceeding
 verboseVariables
+echo "do the xml parsing..." && prepareISRCCodes
 createEncodedWavs
