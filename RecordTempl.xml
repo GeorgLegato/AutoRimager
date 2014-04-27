@@ -1,7 +1,7 @@
 <Record>
   <WriteTrack Filename="${ABSTRACKFILE}">
     <Audio AddPregapBlocks="0">
-      <AudioControl AllowCopy="false" FourChannel="false" PreEmphasis="false"/>
+      <AudioControl AllowCopy="false" FourChannel="false" PreEmphasis="false" ISRC_Code="${ISRCCODE}"/>
     </Audio>
   </WriteTrack>
 </Record>

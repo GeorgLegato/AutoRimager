@@ -2,7 +2,7 @@
 # Argument = -k 1 -k 3 -k10-20 -k0x16-0x20 -s albumwavs -t Intro.wav -t chapter1.wav -t chapter2.wav
 #  -k0x56 -k0x7890 -k0x9876 -k0xABCDEF12 -k0x12345678
 
-VERSION=0.51
+VERSION=0.60
 
 # static configurations
 PRODORDERTEMPL=ProdOrderTempl.xml
@@ -49,9 +49,32 @@ prepareISRCCodes()
 			ISRCODES[i+1]=""
 	done	
 
-	xml_read $CDTEXT TrackInfo ISRC_Code
-	echo "DEBUG: Attributes = $ATTRIBUTES"
-			
+	declare -a trackNumbers
+	declare -a isrcs
+	
+	for TRNO in $(xml_read "$CDTEXT" TrackInfo TrackNumber)
+	do
+		trackNumbers=("${trackNumbers[@]}" $TRNO) 
+	done
+
+	for ISRC in $(xml_read "$CDTEXT" TrackInfo ISRC_Code)
+	do
+		isrcs=("${isrcs[@]}" $ISRC) 
+	done
+	
+	for (( i=0; i<${#trackNumbers[@]}; i++ ))
+	do
+		local TNO=${trackNumbers[$i]}
+		local ISRC=${isrcs[$i]}
+		ISRCCODES[$TNO]="$ISRC"
+	done	
+	
+	#echo "debug: All isrcs read from xml: ${ISRCCODES[@]}" 
+	#for i in "${!ISRCCODES[@]}"
+	#do
+	#  echo "key  : $i"
+	#  echo "value: ${ISRCCODES[$i]}"
+	#done	
 }
 
 
@@ -126,7 +149,7 @@ createEncodedWavs()
 		for (( i=0; i<"${#TRACKS[@]}"; ++i ))
 		do	
 			local t=${TRACKS[$i]}
-			local isrc=${ISRCCODES[$i+1]}
+			ISRCCODE=${ISRCCODES[$i+1]}
 
 			#ABSTRACKFILE and RECORDS is used within ProdXML template                  
 			ABSTRACKFILE=$(cygpath.exe -wa "$OUTPUTFOLDER/$ENCODEDWAVFOLDER/$t")
@@ -299,5 +322,5 @@ fi
 
 # all input parameters ok, start proceeding
 verboseVariables
-echo "do the xml parsing..." && prepareISRCCodes
+prepareISRCCodes
 createEncodedWavs
