@@ -6,11 +6,7 @@ ExternalImager="false" SimulatePrinting="false" SimulateRecording="false" ${CDTE
 <Target Line="ANY" Server="ANY" Cluster="DefaultProductionCluster"/>
 <InOut OutputMailslot="0"/>
 
-<Action>
-
-  ${RECORDS}
-
-</Action>
+${RECORDS}
 
 <Action>
   <Record>
